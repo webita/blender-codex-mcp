@@ -1,0 +1,16 @@
+{
+  "blender": {
+    "command": "uv",
+    "args": [
+      "--directory",
+      "../..",
+      "run",
+      "blender-codex-mcp"
+    ],
+    "env": {
+      "BLENDER_HOST": "localhost",
+      "BLENDER_PORT": "9876",
+      "DISABLE_TELEMETRY": "true"
+    }
+  }
+}

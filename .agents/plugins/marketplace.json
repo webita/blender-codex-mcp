@@ -1,0 +1,20 @@
+{
+  "name": "webita-local",
+  "interface": {
+    "displayName": "Webita Local Plugins"
+  },
+  "plugins": [
+    {
+      "name": "blender-codex-connector",
+      "source": {
+        "source": "local",
+        "path": "./plugins/blender-codex-connector"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

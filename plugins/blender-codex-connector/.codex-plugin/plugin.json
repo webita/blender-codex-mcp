@@ -1,0 +1,43 @@
+{
+  "name": "blender-codex-connector",
+  "version": "0.1.0",
+  "description": "Codex plugin scaffold for the Blender Codex MCP server",
+  "author": {
+    "name": "Webita",
+    "email": "info@webita.eu",
+    "url": "https://webita.eu"
+  },
+  "homepage": "https://github.com/webita/blender-codex-mcp",
+  "repository": "https://github.com/webita/blender-codex-mcp",
+  "license": "MIT",
+  "keywords": [
+    "blender",
+    "mcp",
+    "codex",
+    "3d"
+  ],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Blender Codex Connector",
+    "shortDescription": "Use Blender through the local MCP bridge.",
+    "longDescription": "Repo-local Codex plugin scaffold that points Codex at the Blender Codex MCP server so users can inspect scenes, run Blender Python, sync cameras, capture viewport screenshots, and export GLB files.",
+    "developerName": "Webita",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://webita.eu",
+    "privacyPolicyURL": "https://webita.eu/privacy-policy/",
+    "termsOfServiceURL": "https://webita.eu/terms-and-conditions/",
+    "defaultPrompt": [
+      "Inspect the open Blender scene.",
+      "Sync the camera to the current viewport.",
+      "Export the selected model to GLB."
+    ],
+    "brandColor": "#0F766E",
+    "composerIcon": "./assets/blender-codex-icon.svg",
+    "logo": "./assets/blender-codex-icon.svg",
+    "screenshots": []
+  }
+}
