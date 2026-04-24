@@ -8,6 +8,44 @@ Blender Codex MCP connects Codex to Blender through the Model Context Protocol.
 
 This fork is focused on practical 3D work with Codex: scene inspection, viewport screenshots, Python execution inside Blender, and optional asset/model integrations.
 
+## Quick Install
+
+1. Clone this repo.
+
+```bash
+git clone https://github.com/webita/blender-codex-mcp.git
+cd blender-codex-mcp
+```
+
+2. Install [addon.py](./addon.py) in Blender.
+3. Enable the addon and click `Connect to MCP server` in the Blender sidebar.
+4. Add the MCP config below to `~/.codex/config.toml`.
+5. Restart Codex and ask it to inspect Blender.
+
+```toml
+[mcp_servers.blender]
+command = "uv"
+args = [
+  "--directory",
+  "/absolute/path/to/blender-codex-mcp",
+  "run",
+  "blender-codex-mcp"
+]
+
+[mcp_servers.blender.env]
+BLENDER_HOST = "localhost"
+BLENDER_PORT = "9876"
+DISABLE_TELEMETRY = "true"
+```
+
+Useful first prompt:
+
+```text
+Inspect the open Blender scene and take a viewport screenshot.
+```
+
+> Note: Codex does not currently provide a public third-party plugin marketplace. This repository is meant to be installed from GitHub as an MCP server. A local Codex plugin scaffold is included for future/plugin-based workflows.
+
 ## MCP Server Vs Codex Plugin
 
 These are related, but not the same thing.
@@ -71,6 +109,7 @@ The result is a much tighter loop for:
 - [assets](./assets): addon screenshots/icons
 - [docs/WORDPRESS_EMBED.md](./docs/WORDPRESS_EMBED.md): export and embed workflow for WordPress
 - [docs/PUBLISHING_CHECKLIST.md](./docs/PUBLISHING_CHECKLIST.md): GitHub/release/video checklist
+- [docs/YOUTUBE_DEMO_SCRIPT.md](./docs/YOUTUBE_DEMO_SCRIPT.md): video recording outline and demo prompts
 - [examples/web_ready_scene_setup.py](./examples/web_ready_scene_setup.py): generic example for centering geometry, applying base materials, and preparing a scene for web export
 - [plugins/blender-codex-connector](./plugins/blender-codex-connector): repo-local Codex plugin scaffold for this MCP project
 - [.agents/plugins/marketplace.json](./.agents/plugins/marketplace.json): optional local marketplace entry for plugin ordering/discovery
@@ -130,6 +169,8 @@ The current scaffold is intentionally simple:
 - plugin metadata lives in the plugin folder
 - the plugin points back to this repo's MCP server with `uv`
 - you can fill in public URLs, screenshots, and marketplace details when you publish
+
+At the moment, treat this as experimental packaging. The recommended public install path is still the manual MCP setup from GitHub.
 
 ## Quick Start
 
@@ -224,6 +265,28 @@ Telemetry is conservative by default in this fork.
 
 If you publish publicly, document telemetry behavior clearly in GitHub and in the video.
 
+## FAQ
+
+### Is this a one-click Codex plugin?
+
+Not yet. Today the reliable public install path is GitHub plus manual MCP configuration. The repo includes an experimental Codex plugin scaffold, but there is currently no public third-party Codex plugin marketplace for one-click discovery and install.
+
+### Does Blender need to stay open?
+
+Yes. The MCP server talks to the Blender addon running inside a live Blender session.
+
+### Does this install Blender automatically?
+
+No. Users install Blender separately, then install [addon.py](./addon.py) in Blender.
+
+### Can Codex see what it is doing in Blender?
+
+It can inspect scene data and request viewport screenshots through the MCP tools. That feedback loop is the main reason this bridge is useful.
+
+### Can I use this for web exports?
+
+Yes. Use `export_glb` or Blender's built-in export workflow, then embed the `.glb` with a WebGL viewer. See [docs/WORDPRESS_EMBED.md](./docs/WORDPRESS_EMBED.md).
+
 ## What I Would Improve Before Public Launch
 
 The project is already publishable, but these would make it stronger:
@@ -232,8 +295,6 @@ The project is already publishable, but these would make it stronger:
 2. Add a `docs/` folder with setup, troubleshooting, and export examples.
 3. Add a release section with tested versions of Blender and Codex.
 4. Add a small FAQ.
-5. Add a safer note about `execute_blender_code`, since it can run arbitrary Blender Python.
-6. Add a short "known limitations" section.
 
 I have added the docs pieces that help most immediately for GitHub and YouTube.
 
