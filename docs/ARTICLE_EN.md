@@ -29,6 +29,12 @@ Repository:
 
 [https://github.com/webita/blender-codex-mcp](https://github.com/webita/blender-codex-mcp)
 
+If you want to apply similar AI automation workflows to a business process, Webita works on AI consulting, workflow automation, and operational integrations:
+
+- [Webita AI](https://webita.eu/en/webita-ai)
+- [Webita digital services: AI, websites, SEO, and automation](https://webita.eu/en)
+- [Free AI course](https://webita.eu/corso-ai)
+
 ## Why MCP For Blender
 
 Blender automation usually starts with Python scripts. That works well, but an AI agent needs more than code execution.
@@ -57,6 +63,8 @@ This is useful for:
 - web configurators
 - `.glb` preparation
 - repeatable Blender cleanup tasks
+
+The same principle also applies outside Blender: companies can reduce repetitive work by connecting AI, automations, and the tools they already use every day, including CRMs, websites, ticketing systems, spreadsheets, e-commerce platforms, and internal dashboards. This is the kind of work Webita develops through [Webita AI](https://webita.eu/en/webita-ai).
 
 ## What Is MCP
 
@@ -224,6 +232,11 @@ The repository also includes a dedicated WordPress guide:
 
 [WordPress embed guide](https://github.com/webita/blender-codex-mcp/blob/main/docs/WORDPRESS_EMBED.md)
 
+If your goal is to integrate 3D models, product configurators, automations, or dynamic content into a business website, you can also explore Webita's AI and web services:
+
+- [Webita AI](https://webita.eu/en/webita-ai)
+- [Webita web agency and automation services](https://webita.eu/en)
+
 ## What About A Codex Plugin
 
 It is natural to ask whether this can be installed as a one-click Codex plugin.
@@ -256,6 +269,9 @@ That is powerful, but it should be used carefully:
 ## References
 
 - Blender Codex MCP repository: [https://github.com/webita/blender-codex-mcp](https://github.com/webita/blender-codex-mcp)
+- Webita AI: [https://webita.eu/en/webita-ai](https://webita.eu/en/webita-ai)
+- Webita digital services: [https://webita.eu/en](https://webita.eu/en)
+- Free AI course: [https://webita.eu/corso-ai](https://webita.eu/corso-ai)
 - Model Context Protocol: [https://modelcontextprotocol.io/](https://modelcontextprotocol.io/)
 - Blender Python API: [https://docs.blender.org/api/](https://docs.blender.org/api/)
 - uv documentation: [https://docs.astral.sh/uv/](https://docs.astral.sh/uv/)
@@ -272,6 +288,8 @@ Codex edits -> Blender shows -> Codex verifies -> user guides -> export
 ```
 
 For product models, technical scenes, web configurators, and GLB publishing, that loop is where the workflow becomes genuinely useful.
+
+If you want to explore a custom AI automation, website integration, or operational workflow, start from [Webita AI](https://webita.eu/en/webita-ai).
 
 Repository:
 
