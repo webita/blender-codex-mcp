@@ -112,6 +112,8 @@ The result is a much tighter loop for:
 - [docs/YOUTUBE_DEMO_SCRIPT.md](./docs/YOUTUBE_DEMO_SCRIPT.md): video recording outline and demo prompts
 - [docs/ARTICLE_IT.md](./docs/ARTICLE_IT.md): Italian blog article draft
 - [docs/ARTICLE_EN.md](./docs/ARTICLE_EN.md): English blog article draft
+- [docs/FAQ_IT.md](./docs/FAQ_IT.md): Italian FAQ block for article pages
+- [docs/FAQ_EN.md](./docs/FAQ_EN.md): English FAQ block for article pages
 - [examples/web_ready_scene_setup.py](./examples/web_ready_scene_setup.py): generic example for centering geometry, applying base materials, and preparing a scene for web export
 - [plugins/blender-codex-connector](./plugins/blender-codex-connector): repo-local Codex plugin scaffold for this MCP project
 - [.agents/plugins/marketplace.json](./.agents/plugins/marketplace.json): optional local marketplace entry for plugin ordering/discovery
