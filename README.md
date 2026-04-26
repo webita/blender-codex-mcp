@@ -110,6 +110,7 @@ The result is a much tighter loop for:
 - [docs/WORDPRESS_EMBED.md](./docs/WORDPRESS_EMBED.md): export and embed workflow for WordPress
 - [docs/PUBLISHING_CHECKLIST.md](./docs/PUBLISHING_CHECKLIST.md): GitHub/release/video checklist
 - [docs/YOUTUBE_DEMO_SCRIPT.md](./docs/YOUTUBE_DEMO_SCRIPT.md): video recording outline and demo prompts
+- [docs/YOUTUBE_DETAILED_SCRIPT_IT.md](./docs/YOUTUBE_DETAILED_SCRIPT_IT.md): detailed Italian YouTube script and b-roll outline
 - [docs/ARTICLE_IT.md](./docs/ARTICLE_IT.md): Italian blog article draft
 - [docs/ARTICLE_EN.md](./docs/ARTICLE_EN.md): English blog article draft
 - [docs/FAQ_IT.md](./docs/FAQ_IT.md): Italian FAQ block for article pages
