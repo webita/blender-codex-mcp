@@ -25,11 +25,47 @@ logger = logging.getLogger("BlenderCodexMCPServer")
 # Default configuration
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 9876
+DEFAULT_AUTH_TOKEN = ""
+AUTH_TOKEN_FILE_ENV = "BLENDER_AUTH_TOKEN_FILE"
+DEFAULT_AUTH_TOKEN_FILE = Path.home() / ".blender-codex-mcp" / "auth.json"
+
+
+def _auth_token_file() -> Path:
+    configured = os.getenv(AUTH_TOKEN_FILE_ENV)
+    if configured:
+        return Path(configured).expanduser()
+    return DEFAULT_AUTH_TOKEN_FILE
+
+
+def _load_auth_config() -> tuple[str, str | None, int | None]:
+    env_token = os.getenv("BLENDER_AUTH_TOKEN", DEFAULT_AUTH_TOKEN)
+    if env_token:
+        return env_token, None, None
+
+    path = _auth_token_file()
+    if not path.exists():
+        raise Exception(
+            f"Blender auth token file not found at {path}. Start the Blender addon once, or set BLENDER_AUTH_TOKEN."
+        )
+
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        raise Exception(f"Could not read Blender auth token file at {path}: {exc}") from exc
+
+    token = data.get("auth_token", "")
+    if not token:
+        raise Exception(f"Blender auth token file at {path} does not contain auth_token")
+
+    host = data.get("host")
+    port = data.get("port")
+    return token, host if isinstance(host, str) and host else None, int(port) if port else None
 
 @dataclass
 class BlenderConnection:
     host: str
     port: int
+    auth_token: str = DEFAULT_AUTH_TOKEN
     sock: socket.socket = None  # Changed from 'socket' to 'sock' to avoid naming conflict
     
     def connect(self) -> bool:
@@ -120,7 +156,8 @@ class BlenderConnection:
         
         command = {
             "type": command_type,
-            "params": params or {}
+            "params": params or {},
+            "auth_token": self.auth_token,
         }
         
         try:
@@ -239,9 +276,10 @@ def get_blender_connection():
     
     # Create a new connection if needed
     if _blender_connection is None:
-        host = os.getenv("BLENDER_HOST", DEFAULT_HOST)
-        port = int(os.getenv("BLENDER_PORT", DEFAULT_PORT))
-        _blender_connection = BlenderConnection(host=host, port=port)
+        auth_token, token_file_host, token_file_port = _load_auth_config()
+        host = os.getenv("BLENDER_HOST") or token_file_host or DEFAULT_HOST
+        port = int(os.getenv("BLENDER_PORT") or token_file_port or DEFAULT_PORT)
+        _blender_connection = BlenderConnection(host=host, port=port, auth_token=auth_token)
         if not _blender_connection.connect():
             logger.error("Failed to connect to Blender")
             _blender_connection = None
