@@ -18,9 +18,10 @@ cd blender-codex-mcp
 ```
 
 2. Install [addon.py](./addon.py) in Blender.
-3. Enable the addon and click `Connect to MCP server` in the Blender sidebar.
-4. Add the MCP config below to `~/.codex/config.toml`.
-5. Restart Codex and ask it to inspect Blender.
+3. Enable the addon.
+4. Click `Connect to MCP server` in the Blender sidebar. The addon writes a fresh local auth token for that session automatically.
+5. Add the MCP config below to `~/.codex/config.toml`.
+6. Restart Codex and ask it to inspect Blender.
 
 ```toml
 [mcp_servers.blender]
@@ -135,7 +136,7 @@ The result is a much tighter loop for:
 5. Enable `Interface: Blender Codex MCP`.
 6. In the 3D viewport, press `N`, open the `BlenderCodexMCP` tab, and click `Connect to MCP server`.
 
-By default the addon listens on `localhost:9876`.
+By default the addon listens on `localhost:9876` and writes a fresh local auth token to `~/.blender-codex-mcp/auth.json` each time you connect. The MCP server reads that file automatically. The same file is overwritten for new sessions and removed on disconnect, so token files do not accumulate. For advanced setups, set `BLENDER_AUTH_TOKEN_FILE` on both sides or set `BLENDER_AUTH_TOKEN` directly in the MCP environment.
 
 ## Configure Codex
 

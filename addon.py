@@ -13,9 +13,11 @@ import traceback
 import os
 import shutil
 import zipfile
-from bpy.props import IntProperty, BoolProperty
+import secrets
+from bpy.props import IntProperty, BoolProperty, StringProperty
 import io
 from datetime import datetime
+from pathlib import Path
 import hashlib, hmac, base64
 import os.path as osp
 from contextlib import redirect_stdout, suppress
@@ -36,10 +38,69 @@ RODIN_FREE_TRIAL_KEY = "k9TcfFoEhNd9cCPP2guHAHHHkctZHIRhZDywZ1euGUXwihbYLpOjQhof
 REQ_HEADERS = requests.utils.default_headers()
 REQ_HEADERS.update({"User-Agent": "blender-codex-mcp"})
 
+AUTH_TOKEN_FILE_ENV = "BLENDER_AUTH_TOKEN_FILE"
+DEFAULT_AUTH_TOKEN_FILE = Path.home() / ".blender-codex-mcp" / "auth.json"
+
+
+def _auth_token_file():
+    configured = os.environ.get(AUTH_TOKEN_FILE_ENV)
+    if configured:
+        return Path(configured).expanduser()
+    return DEFAULT_AUTH_TOKEN_FILE
+
+
+def _write_auth_token_file(token, port, session_id):
+    path = _auth_token_file()
+    payload = {
+        "auth_token": token,
+        "host": "localhost",
+        "port": port,
+        "session_id": session_id,
+        "pid": os.getpid(),
+        "created_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+    }
+    try:
+        path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        os.chmod(path, 0o600)
+        return path
+    except Exception as exc:
+        print(f"Could not write Blender Codex MCP auth token file: {exc}")
+        return None
+
+
+def _create_session_auth(scene):
+    scene.blendermcp_auth_token = secrets.token_urlsafe(32)
+    scene.blendermcp_auth_session_id = secrets.token_urlsafe(16)
+    _write_auth_token_file(
+        scene.blendermcp_auth_token,
+        scene.blendermcp_port,
+        scene.blendermcp_auth_session_id,
+    )
+    return scene.blendermcp_auth_token
+
+
+def _remove_auth_token_file(expected_token="", expected_session_id=""):
+    path = _auth_token_file()
+    try:
+        if not path.exists():
+            return
+        if expected_token or expected_session_id:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            if expected_token and data.get("auth_token") != expected_token:
+                return
+            if expected_session_id and data.get("session_id") != expected_session_id:
+                return
+        path.unlink()
+    except Exception as exc:
+        print(f"Could not remove Blender Codex MCP auth token file: {exc}")
+
+
 class BlenderMCPServer:
-    def __init__(self, host='localhost', port=9876):
+    def __init__(self, host='localhost', port=9876, auth_token=''):
         self.host = host
         self.port = port
+        self.auth_token = auth_token
         self.running = False
         self.socket = None
         self.server_thread = None
@@ -186,6 +247,12 @@ class BlenderMCPServer:
     def execute_command(self, command):
         """Execute a command in the main Blender thread"""
         try:
+            provided_token = command.get("auth_token")
+            if not self.auth_token:
+                return {"status": "error", "message": "Blender MCP auth token is not configured"}
+            if not provided_token or not hmac.compare_digest(str(provided_token), str(self.auth_token)):
+                return {"status": "error", "message": "Unauthorized Blender MCP request"}
+
             return self._execute_command_internal(command)
 
         except Exception as e:
@@ -2368,6 +2435,7 @@ class BLENDERMCP_PT_Panel(bpy.types.Panel):
         scene = context.scene
 
         layout.prop(scene, "blendermcp_port")
+        layout.operator("blendermcp.regenerate_auth_token", text="Reset Local Pairing")
         layout.prop(scene, "blendermcp_use_polyhaven", text="Use assets from Poly Haven")
 
         layout.prop(scene, "blendermcp_use_hyper3d", text="Use Hyper3D Rodin 3D model generation")
@@ -2410,6 +2478,18 @@ class BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey(bpy.types.Operator):
         self.report({'INFO'}, "API Key set successfully!")
         return {'FINISHED'}
 
+class BLENDERMCP_OT_RegenerateAuthToken(bpy.types.Operator):
+    bl_idname = "blendermcp.regenerate_auth_token"
+    bl_label = "Regenerate Auth Token"
+    bl_description = "Generate a new random token for local MCP authentication"
+
+    def execute(self, context):
+        _create_session_auth(context.scene)
+        if hasattr(bpy.types, "blendermcp_server") and bpy.types.blendermcp_server:
+            bpy.types.blendermcp_server.auth_token = context.scene.blendermcp_auth_token
+        self.report({'INFO'}, "Blender Codex MCP auth token regenerated")
+        return {'FINISHED'}
+
 # Operator to start the server
 class BLENDERMCP_OT_StartServer(bpy.types.Operator):
     bl_idname = "blendermcp.start_server"
@@ -2419,9 +2499,16 @@ class BLENDERMCP_OT_StartServer(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
 
+        auth_token = _create_session_auth(scene)
+
         # Create a new server instance
         if not hasattr(bpy.types, "blendermcp_server") or not bpy.types.blendermcp_server:
-            bpy.types.blendermcp_server = BlenderMCPServer(port=scene.blendermcp_port)
+            bpy.types.blendermcp_server = BlenderMCPServer(
+                port=scene.blendermcp_port,
+                auth_token=auth_token,
+            )
+        else:
+            bpy.types.blendermcp_server.auth_token = auth_token
 
         # Start the server
         bpy.types.blendermcp_server.start()
@@ -2437,12 +2524,17 @@ class BLENDERMCP_OT_StopServer(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
+        auth_token = scene.blendermcp_auth_token
+        auth_session_id = scene.blendermcp_auth_session_id
 
         # Stop the server if it exists
         if hasattr(bpy.types, "blendermcp_server") and bpy.types.blendermcp_server:
             bpy.types.blendermcp_server.stop()
             del bpy.types.blendermcp_server
 
+        _remove_auth_token_file(auth_token, auth_session_id)
+        scene.blendermcp_auth_token = ""
+        scene.blendermcp_auth_session_id = ""
         scene.blendermcp_server_running = False
 
         return {'FINISHED'}
@@ -2478,6 +2570,20 @@ def register():
     bpy.types.Scene.blendermcp_server_running = bpy.props.BoolProperty(
         name="Server Running",
         default=False
+    )
+
+    bpy.types.Scene.blendermcp_auth_token = StringProperty(
+        name="Auth Token",
+        description="Random token required by the Codex MCP server before Blender executes commands",
+        default="",
+        subtype="PASSWORD"
+    )
+
+    bpy.types.Scene.blendermcp_auth_session_id = StringProperty(
+        name="Auth Session ID",
+        description="Ephemeral local session id for the current Blender Codex MCP token",
+        default="",
+        options={'HIDDEN'}
     )
 
     bpy.types.Scene.blendermcp_use_polyhaven = bpy.props.BoolProperty(
@@ -2592,6 +2698,7 @@ def register():
 
     bpy.utils.register_class(BLENDERMCP_PT_Panel)
     bpy.utils.register_class(BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey)
+    bpy.utils.register_class(BLENDERMCP_OT_RegenerateAuthToken)
     bpy.utils.register_class(BLENDERMCP_OT_StartServer)
     bpy.utils.register_class(BLENDERMCP_OT_StopServer)
     bpy.utils.register_class(BLENDERMCP_OT_OpenTerms)
@@ -2600,12 +2707,22 @@ def register():
 
 def unregister():
     # Stop the server if it's running
+    auth_token = ""
+    auth_session_id = ""
+    scene = getattr(bpy.context, "scene", None)
+    if scene is not None:
+        auth_token = getattr(scene, "blendermcp_auth_token", "")
+        auth_session_id = getattr(scene, "blendermcp_auth_session_id", "")
+
     if hasattr(bpy.types, "blendermcp_server") and bpy.types.blendermcp_server:
         bpy.types.blendermcp_server.stop()
         del bpy.types.blendermcp_server
 
+    _remove_auth_token_file(auth_token, auth_session_id)
+
     bpy.utils.unregister_class(BLENDERMCP_PT_Panel)
     bpy.utils.unregister_class(BLENDERMCP_OT_SetFreeTrialHyper3DAPIKey)
+    bpy.utils.unregister_class(BLENDERMCP_OT_RegenerateAuthToken)
     bpy.utils.unregister_class(BLENDERMCP_OT_StartServer)
     bpy.utils.unregister_class(BLENDERMCP_OT_StopServer)
     bpy.utils.unregister_class(BLENDERMCP_OT_OpenTerms)
@@ -2613,6 +2730,8 @@ def unregister():
 
     del bpy.types.Scene.blendermcp_port
     del bpy.types.Scene.blendermcp_server_running
+    del bpy.types.Scene.blendermcp_auth_token
+    del bpy.types.Scene.blendermcp_auth_session_id
     del bpy.types.Scene.blendermcp_use_polyhaven
     del bpy.types.Scene.blendermcp_use_hyper3d
     del bpy.types.Scene.blendermcp_hyper3d_mode
